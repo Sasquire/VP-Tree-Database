@@ -1,0 +1,33 @@
+[package]
+name = "feature_database"
+version = "0.1.0"
+authors = ["Sasquire"]
+edition = "2018"
+license = "Unlicense"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = "2.33.3"         # Argument parsing
+opencv = "0.53"         # OpenCV bindings
+rusqlite = "0.25.3"     # Sqlite3 Bindings
+atomicwrites = "0.3.0"  # Write files atomic-ly
+
+# Randomness
+rand = "0.7.3"
+rand_core = "*"
+rand_chacha = "*"
+
+# Used for benchmarking, may return
+# chrono = "0.4"
+
+
+
+# https://aspenuwu.me/blog/rust-optimization/
+# TODO find more optimizations
+[profile.release]
+lto = 'thin'
+panic = 'abort'
+codegen-units = 1
+
+# Remove when really releasing
+debug = 1

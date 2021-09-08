@@ -1,0 +1,15 @@
+# Rust files
+/target/
+
+# Files for importing and testing
+/import_data/
+/images/
+/database/
+test.sh
+
+# Files created by the database
+metadata.sqlite3
+vp_tree.*
+
+# Temporary storage
+/tmp/
