@@ -15,6 +15,8 @@ use atomicwrites::AtomicFile;
 #[derive(Clone)]
 pub struct FileNode {
 	path_in_tree: NodePath,
+	file_contents: Option<Box<Node>>,
+	has_changed: bool,
 }
 
 fn get_node_from_file(file_path: String) -> Node {
@@ -35,9 +37,9 @@ fn get_node_from_file(file_path: String) -> Node {
 	return node;
 }
 
-fn overwrite_node_to_file(file_path: String, node: Node) {
+fn overwrite_node_to_file(file_path: String, data: Vec<u8>) {
 	AtomicFile::new(file_path, AllowOverwrite)
-		.write(|file| file.write_all(&node.to_binary()))
+		.write(|file| file.write_all(&data))
 		.expect("Writing to atomic file failed");
 }
 
@@ -45,42 +47,69 @@ impl FileNode {
 	pub fn new_at_location(path_in_tree: NodePath) -> Node {
 		return Node::File(FileNode {
 			path_in_tree: path_in_tree,
+			file_contents: None,
+			has_changed: false,
 		});
 	}
 
-	fn open_file(&self) -> Node {
-		return get_node_from_file(self.path_in_tree.to_file_path_string());
+	fn open(&mut self) {
+		if self.file_contents.is_none() {
+			let node = get_node_from_file(self.path_in_tree.to_file_path_string());
+			self.file_contents = Some(Box::new(node));
+		}
 	}
 
-	fn save_file(&self, to_save: Node) {
-		overwrite_node_to_file(self.path_in_tree.to_file_path_string(), to_save);
+	fn save(&mut self) {
+		let node = self
+			.file_contents
+			.as_mut()
+			.expect("Tried to save an empty file node");
+		overwrite_node_to_file(self.path_in_tree.to_file_path_string(), node.to_binary());
+		self.file_contents = None;
+		self.has_changed = false;
+	}
+
+	fn open_temporarily(&self) -> Node {
+		return get_node_from_file(self.path_in_tree.to_file_path_string());
+	}
+}
+
+impl Drop for FileNode {
+	fn drop(&mut self) {
+		if self.has_changed {
+			self.save();
+		}
 	}
 }
 
 impl TreeNode for FileNode {
 	fn new_empty() -> Node {
-		return Node::File(FileNode {
-			path_in_tree: NodePath::new_empty(),
-		});
+		return FileNode::new_at_location(NodePath::new_empty());
 	}
 
 	fn add(&mut self, to_add: UUIDDescriptionPair, mut current_path: NodePath) -> bool {
-		let mut file_data = self.open_file();
+		self.open();
+
 		current_path.add_direction(crate::constants::FILE_KEY);
-		let file_changed = file_data.add(to_add.clone(), current_path);
-		if file_changed {
-			self.save_file(file_data);
+		let did_change = self
+			.file_contents
+			.as_mut()
+			.expect("Tried to add node to file that was not open")
+			.add(to_add, current_path);
+
+		if did_change == true {
+			self.has_changed = true;
 		}
 
 		return false;
 	}
 
 	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
-		return self.open_file().find(to_find);
+		return self.open_temporarily().find(to_find);
 	}
 
 	fn size(&self) -> u64 {
-		return self.open_file().size();
+		return self.open_temporarily().size();
 	}
 
 	fn to_binary(&self) -> Vec<u8> {

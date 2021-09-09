@@ -1,3 +1,4 @@
+pub const APP_NAME: &str = "VP-Tree-Database";
 pub const VERSION: &str = "0.00001";
 pub const CONTACT_INFO: &str = "Sasquire (idem on e621.net)";
 pub const ABOUT: &str = "A database using a vantage-point tree for reverse-image-searches";
@@ -5,7 +6,7 @@ pub const ABOUT: &str = "A database using a vantage-point tree for reverse-image
 pub const DATABASE_FOLDER_PATH: &str = "./database/";
 pub const SQLITE_DATABASE_PATH: &str = "./database/metadata.sqlite3";
 
-pub const MAX_LEAF_NODE_SIZE: u64 = 1024 * 2;
+pub const MAX_LEAF_NODE_SIZE: u64 = 4096 * 2;
 pub const MAX_FILE_NODE_DEPTH: usize = 4;
 
 pub const FEATURE_DESCRIPTION_LENGTH: usize = 32;

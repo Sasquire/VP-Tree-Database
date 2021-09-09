@@ -6,6 +6,7 @@ use opencv::core::KeyPoint;
 use rusqlite::params;
 use rusqlite::Connection;
 use rusqlite::OpenFlags;
+use rusqlite::Statement;
 
 pub fn initialize_database() {
 	const CREATE_TABLE_FILES_STRING: &str = "CREATE TABLE IF NOT EXISTS files (
@@ -54,83 +55,102 @@ pub fn get_max_uuid() -> u64 {
 	return new_uuid;
 }
 
-pub fn insert_metadata_vec_into_database(metadata_vec: Vec<(u64, KeyPoint)>, frame: FrameInfo) {
-	let file_uuid = add_and_get_file_uuid(frame);
-
+type FrameMetaDataPair = (FrameInfo, Vec<(u64, KeyPoint)>);
+pub fn insert_meta_data_pair_vec_to_database(list: Vec<FrameMetaDataPair>) {
 	let connection = open_sqlite_connection();
-	for (uuid, keypoint) in metadata_vec {
-		insert_metadata_to_database(&connection, &file_uuid, uuid, keypoint);
+	connection
+		.execute_batch("BEGIN")
+		.expect("Starting transaction failed.");
+
+	let mut get_max_file_uuid_statement = connection
+		.prepare("SELECT COALESCE(MAX(file_uuid), 0) FROM files;")
+		.expect("Preparing statement to get max file_uuid failed.");
+	let mut insert_into_files_statement = connection
+		.prepare(
+			"INSERT INTO files 
+			(file_uuid, md5, file_ext, frame_id)
+			VALUES (?1, ?2, ?3, ?4);",
+		)
+		.expect("Preparing statement to insert into database table 'files' failed.");
+	let mut insert_into_metadata_statement = connection
+		.prepare(
+			"INSERT INTO metadata
+			(uuid, file_uuid, x, y, size, angle, response, octave)
+			VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);",
+		)
+		.expect("Preparing statement to insert into database table 'metadata' failed.");
+
+	let total = list.len();
+	for (counter, (frame, metadata_vec)) in list.into_iter().enumerate() {
+		let file_uuid = {
+			let result = insert_and_get_file_uuid(
+				&mut get_max_file_uuid_statement,
+				&mut insert_into_files_statement,
+				frame,
+			);
+			result.expect("Inserting into database table 'files' failed. It was likely due to a md5 duplication. VP-Tree database is likely corrupted/tainted if things were added with threads")
+		};
+
+		for (uuid, keypoint) in metadata_vec {
+			insert_metadata_info_into_database(
+				&mut insert_into_metadata_statement,
+				(uuid, file_uuid, keypoint),
+			);
+		}
+
+		if counter % 1000 == 0 {
+			println!("Sqlite3 insert {} out of {}", counter, total);
+		}
 	}
+
+	std::mem::drop(get_max_file_uuid_statement);
+	std::mem::drop(insert_into_files_statement);
+	std::mem::drop(insert_into_metadata_statement);
+	connection
+		.execute_batch("COMMIT;")
+		.expect("Committing transaction failed.");
 	close_sqlite_connection(connection);
+}
 
-	fn insert_metadata_to_database(
-		database: &Connection,
-		file_uuid: &u64,
-		uuid: u64,
-		metadata: KeyPoint,
-	) {
-		const INSERT_KEYPOINT_TO_METADATA_TABLE_STRING: &str = "INSERT INTO metadata (
-			uuid,
-			file_uuid,
-			x,
-			y,
-			size,
-			angle,
-			response,
-			octave
-		) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);";
-		let params = params![
-			uuid,
-			file_uuid,
-			metadata.pt.x,
-			metadata.pt.y,
-			metadata.size,
-			metadata.angle,
-			metadata.response,
-			metadata.octave
-		];
+fn insert_and_get_file_uuid(
+	file_uuid_statement: &mut Statement,
+	insert_statement: &mut Statement,
+	frame: FrameInfo,
+) -> Result<u64, String> {
+	let max_file_uuid: u64 = file_uuid_statement
+		.query_row(params![], |row| row.get(0))
+		.expect("Getting a max file_uuid from database table 'files' failed");
+	let max_file_uuid = max_file_uuid + 1;
 
-		database
-			.execute(INSERT_KEYPOINT_TO_METADATA_TABLE_STRING, params)
-			.expect("Failed inserting values into database");
+	let file_insert = insert_statement.execute(params![
+		max_file_uuid,
+		frame.copy_md5(),
+		frame.copy_ext(),
+		frame.get_id()
+	]);
+
+	if file_insert.is_err() {
+		return Err(String::from(
+			"Inserting into database table 'files' failed. Likely md5 repeat, should skip",
+		));
+	} else {
+		return Ok(max_file_uuid);
 	}
 }
 
-fn add_and_get_file_uuid(frame: FrameInfo) -> u64 {
-	let connection = open_sqlite_connection();
-
-	let max_file_uuid = get_max_file_uuid(&connection) + 1;
-	insert_new_file(&connection, max_file_uuid, frame);
-	close_sqlite_connection(connection);
-	return max_file_uuid;
-
-	fn get_max_file_uuid(connection: &Connection) -> u64 {
-		const SELECT_MAX_FILE_UUID_STRING: &str = "SELECT COALESCE(MAX(file_uuid), 0) FROM files";
-
-		return connection
-			.query_row(SELECT_MAX_FILE_UUID_STRING, params![], |row| row.get(0))
-			.expect("Getting a max file_uuid from database table 'files' failed");
-	}
-
-	fn insert_new_file(connection: &Connection, file_uuid: u64, frame: FrameInfo) {
-		const INSERT_FILE_TO_FILES_TABLE: &str = "INSERT INTO files (
-			file_uuid,
-			md5,
-			file_ext,
-			frame_id
-		) VALUES (?1, ?2, ?3, ?4);";
-
-		let params = params![
-			file_uuid,
-			frame.copy_md5(),
-			frame.copy_ext(),
-			frame.get_id()
-		];
-
-		connection
-			.execute(INSERT_FILE_TO_FILES_TABLE, params)
-			.expect("Inserting into database table 'files' failed. Likely file already exists.");
-	}
+fn insert_metadata_info_into_database(statement: &mut Statement, info: (u64, u64, KeyPoint)) {
+	statement
+		.execute(params![
+			info.0,
+			info.1,
+			info.2.pt.x,
+			info.2.pt.y,
+			info.2.size,
+			info.2.angle,
+			info.2.response,
+			info.2.octave
+		])
+		.expect("Failed inserting values into database");
 }
 
 #[allow(dead_code)]

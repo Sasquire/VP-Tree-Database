@@ -6,6 +6,7 @@
 /images/
 /database/
 test.sh
+test2.sh
 
 # Files created by the database
 metadata.sqlite3

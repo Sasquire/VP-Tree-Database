@@ -22,6 +22,14 @@ impl FrameInfo {
 		};
 	}
 
+	pub fn new(md5: String, ext: String, index: u64) -> FrameInfo {
+		return FrameInfo {
+			md5: md5,
+			ext: ext,
+			index: index,
+		};
+	}
+
 	pub fn copy_md5(&self) -> String {
 		self.md5.clone()
 	}

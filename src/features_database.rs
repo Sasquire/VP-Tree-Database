@@ -6,8 +6,13 @@ use crate::features::feature_description::FeatureDescription;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 
 pub fn insert_description_vec_into_database(description_vec: Vec<UUIDDescriptionPair>) {
+	let total = description_vec.len();
+
 	let mut root_node = Node::get_root_node();
-	for pair in description_vec {
+	for (counter, pair) in description_vec.into_iter().enumerate() {
+		if counter % 1000000 == 0 {
+			println!("Adding node {} out of {}", counter, total);
+		}
 		root_node.add(pair, NodePath::new_empty());
 	}
 }
