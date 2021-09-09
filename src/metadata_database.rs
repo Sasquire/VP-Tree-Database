@@ -89,6 +89,11 @@ pub fn insert_meta_data_pair_vec_to_database(list: Vec<FrameMetaDataPair>) {
 				frame,
 			);
 			result.expect("Inserting into database table 'files' failed. It was likely due to a md5 duplication. VP-Tree database is likely corrupted/tainted if things were added with threads")
+		//	if result.is_err() {
+		//		continue
+		//	} else {
+		//		result.unwrap()
+		//	}
 		};
 
 		for (uuid, keypoint) in metadata_vec {

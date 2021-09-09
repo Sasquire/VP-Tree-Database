@@ -131,10 +131,14 @@ impl TreeNode for InternalNode {
 
 impl InternalNode {
 	pub fn new_from_leaf(node: &mut LeafNode, split_point_path: NodePath) -> Node {
-		let mut new_node = InternalNode::new_empty();
-		for pair in node.get_owned_features() {
-			new_node.add(pair, split_point_path.clone());
-		}
-		return new_node;
+		return split_leaf_with_default_radius(node, split_point_path);
 	}
+}
+
+fn split_leaf_with_default_radius(node: &mut LeafNode, split_point_path: NodePath) -> Node {
+	let mut new_node = InternalNode::new_empty();
+	for pair in node.get_owned_features() {
+		new_node.add(pair, split_point_path.clone());
+	}
+	return new_node;
 }

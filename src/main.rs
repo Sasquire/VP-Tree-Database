@@ -96,17 +96,22 @@ mod add {
 
 	pub fn add_image_to_database(file_path: &str) {
 		let image_features = extract_from_image::get_features_from_image_path(file_path);
-
 		insert_metadata_and_description_to_database(assign_uuids_to_list(vec![(
 			FrameInfo::new_from_static_image_path(file_path),
 			image_features,
 		)]));
 	}
 
+	pub fn add_python_binary_to_database(file_path: &str) {
+		let files = python_binary::parse_python_binary(file_path);
+		let files = assign_uuids_to_list(files);
+		insert_metadata_and_description_to_database(files);
+	}
+
 	fn insert_metadata_and_description_to_database(list: FeaturesWithUUID) {
 		let (metadata_list, description_pairs) = list;
 
-		const THREADED_INSERT: bool = true;
+		const THREADED_INSERT: bool = false;
 		if THREADED_INSERT {
 			let sqlite_handle = std::thread::spawn(|| {
 				metadata_database::insert_meta_data_pair_vec_to_database(metadata_list)
@@ -147,18 +152,4 @@ mod add {
 
 		return (metadata_frame_list, all_descriptions);
 	}
-
-	pub fn add_python_binary_to_database(file_path: &str) {
-		let files = python_binary::parse_python_binary(file_path);
-		let files = assign_uuids_to_list(files);
-		insert_metadata_and_description_to_database(files);
-	}
-
-	/*
-	fn get_uuids(how_many: usize) -> std::ops::Range<u64> {
-		let max_uuid_stored = metadata_database::get_max_uuid();
-		let min = max_uuid_stored + 1;
-		let max = max_uuid_stored + 1 + how_many as u64;
-		return min..max;
-	} */
 }

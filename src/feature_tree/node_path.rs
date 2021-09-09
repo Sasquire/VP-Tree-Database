@@ -15,7 +15,13 @@ impl NodePath {
 	}
 
 	pub fn to_file_path_string(&self) -> String {
-		let path_string: String = self.path.iter().map(|&e| e as char).collect();
+		let path_string: String = self.path
+			.iter()
+			.map(|&e| match e {
+				crate::constants::FILE_KEY => String::from("l"),
+				other => String::from(other as char)
+			})
+			.collect();
 		let file_name = String::from("vp_tree.") + &path_string + ".database";
 		let file_path = String::from(crate::constants::DATABASE_FOLDER_PATH) + &file_name;
 		return file_path;

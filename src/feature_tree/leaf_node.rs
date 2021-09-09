@@ -31,6 +31,14 @@ impl TreeNode for LeafNode {
 
 	// TODO does not support for k nearest points, only 1
 	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
+		if self.features.len() == 0 {
+			return SearchResult::new(
+				UUIDDescriptionPair::new(0, FeatureDescription::random()),
+				u32::MAX,
+				u64::MAX
+			);
+		}
+
 		let mut smallest_dist = u32::MAX;
 		let mut smallest_index = &self.features[0];
 		for feature in &self.features {

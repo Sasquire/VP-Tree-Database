@@ -9,6 +9,8 @@ use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::Write;
 
+use std::path::Path;
+
 use atomicwrites::AllowOverwrite;
 use atomicwrites::AtomicFile;
 
@@ -20,6 +22,9 @@ pub struct FileNode {
 }
 
 fn get_node_from_file(file_path: String) -> Node {
+//	let folder_path = Path::new(&file_path).parent().unwrap().to_str().unwrap();
+//	std::fs::create_dir_all(folder_path).unwrap();
+
 	let file = OpenOptions::new()
 		.read(true)
 		.write(true)

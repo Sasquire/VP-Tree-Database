@@ -7,7 +7,7 @@ pub const DATABASE_FOLDER_PATH: &str = "./database/";
 pub const SQLITE_DATABASE_PATH: &str = "./database/metadata.sqlite3";
 
 pub const MAX_LEAF_NODE_SIZE: u64 = 4096 * 2;
-pub const MAX_FILE_NODE_DEPTH: usize = 4;
+pub const MAX_FILE_NODE_DEPTH: usize = 8;
 
 pub const FEATURE_DESCRIPTION_LENGTH: usize = 32;
 // 694960 is the default radius because it is equal to

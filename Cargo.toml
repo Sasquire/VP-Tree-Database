@@ -30,4 +30,4 @@ panic = 'abort'
 codegen-units = 1
 
 # Remove when really releasing
-debug = 1
+# debug = 1
