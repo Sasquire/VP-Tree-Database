@@ -14,12 +14,32 @@ impl NodePath {
 		self.path.push(direction);
 	}
 
+	pub fn from_file_path_string(file_path: String) -> NodePath {
+		let file_name = std::path::Path::new(&file_path)
+			.file_name()
+			.unwrap()
+			.to_str()
+			.unwrap();
+		let splits = file_name.split(".").collect::<Vec<_>>();
+		let mut path = NodePath::new_empty();
+		String::from(*splits.get(1).unwrap())
+			.chars()
+			.for_each(|e| match e as u8 {
+				crate::constants::NEAR_KEY => path.add_direction(crate::constants::NEAR_KEY),
+				crate::constants::FAR_KEY => path.add_direction(crate::constants::FAR_KEY),
+				crate::constants::FILE_KEY => path.add_direction(crate::constants::FILE_KEY),
+				_ => path.add_direction(crate::constants::UNUSED_KEY),
+			});
+		return path;
+	}
+
 	pub fn to_file_path_string(&self) -> String {
-		let path_string: String = self.path
+		let path_string: String = self
+			.path
 			.iter()
 			.map(|&e| match e {
 				crate::constants::FILE_KEY => String::from("l"),
-				other => String::from(other as char)
+				other => String::from(other as char),
 			})
 			.collect();
 		let file_name = String::from("vp_tree.") + &path_string + ".database";
@@ -60,5 +80,9 @@ impl NodePath {
 			.collect();
 
 		return NodePath { path: path };
+	}
+
+	pub fn size(&self) -> usize {
+		return self.path.len();
 	}
 }

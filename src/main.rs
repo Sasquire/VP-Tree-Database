@@ -46,6 +46,12 @@ fn main() {
 				.takes_value(true)
 				.help("Filepath to a binary file containing ORB output that was extracted with python long ago"),
 		)
+		.arg(
+			Arg::with_name("print")
+				.long("print")
+				.takes_value(true)
+				.help("Filepath to a binary file that should be printed"),
+		)
 		.get_matches();
 
 	metadata_database::initialize_database();
@@ -62,6 +68,10 @@ fn main() {
 		let python_binary = matches.value_of("python_binary").unwrap();
 		println!("should merge binary {}", python_binary);
 		add::add_python_binary_to_database(python_binary);
+	} else if matches.value_of("print").is_some() {
+		let print_path = matches.value_of("print").unwrap();
+		println!("should print {}", print_path);
+		features_database::print_path(String::from(print_path));
 	} else {
 		println!("not adding an image");
 	}

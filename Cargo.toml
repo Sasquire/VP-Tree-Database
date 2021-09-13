@@ -6,16 +6,21 @@ edition = "2018"
 license = "Unlicense"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+
+
 [dependencies]
 clap = "2.33.3"         # Argument parsing
 opencv = "0.53"         # OpenCV bindings
-rusqlite = "0.25.3"     # Sqlite3 Bindings
-atomicwrites = "0.3.0"  # Write files atomic-ly
 
 # Randomness
 rand = "0.7.3"
 rand_core = "*"
 rand_chacha = "*"
+
+# Build sqlite into the binary because I was having issues on my server
+[dependencies.rusqlite]
+version = "0.25.3"
+features = ["bundled"]
 
 # Used for benchmarking, may return
 # chrono = "0.4"

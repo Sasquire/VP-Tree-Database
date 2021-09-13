@@ -20,6 +20,10 @@ impl Node {
 		root_path.add_direction(crate::constants::FILE_KEY);
 		return FileNode::new_at_location(root_path);
 	}
+
+	pub fn get_file_as_root(file_path: String) -> Node {
+		return FileNode::new_at_location(NodePath::from_file_path_string(file_path));
+	}
 }
 
 // TODO am I using traits correctly?
@@ -28,6 +32,8 @@ pub trait TreeNode {
 	fn add(&mut self, to_add: UUIDDescriptionPair, current_path: NodePath) -> bool;
 	fn find(&self, to_find: &FeatureDescription) -> SearchResult;
 	fn size(&self) -> u64;
+
+	fn print(&self, depth: u32);
 
 	fn to_binary(&self) -> Vec<u8>;
 	fn from_binary(binary: &[u8]) -> Node;
@@ -88,6 +94,14 @@ impl TreeNode for Node {
 			Node::Internal(node) => node.to_binary(),
 			Node::Leaf(node) => node.to_binary(),
 			Node::File(node) => node.to_binary(),
+		}
+	}
+
+	fn print(&self, depth: u32) {
+		match self {
+			Node::Internal(node) => node.print(depth),
+			Node::Leaf(node) => node.print(depth),
+			Node::File(node) => node.print(depth),
 		}
 	}
 

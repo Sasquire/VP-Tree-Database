@@ -11,8 +11,8 @@ use std::io::Write;
 
 use std::path::Path;
 
-use atomicwrites::AllowOverwrite;
-use atomicwrites::AtomicFile;
+//use atomicwrites::AllowOverwrite;
+//use atomicwrites::AtomicFile;
 
 #[derive(Clone)]
 pub struct FileNode {
@@ -22,15 +22,15 @@ pub struct FileNode {
 }
 
 fn get_node_from_file(file_path: String) -> Node {
-//	let folder_path = Path::new(&file_path).parent().unwrap().to_str().unwrap();
-//	std::fs::create_dir_all(folder_path).unwrap();
+	//	let folder_path = Path::new(&file_path).parent().unwrap().to_str().unwrap();
+	//	std::fs::create_dir_all(folder_path).unwrap();
 
 	let file = OpenOptions::new()
 		.read(true)
 		.write(true)
 		.create(true)
 		.open(file_path)
-		.expect("Opening the VP database failed");
+		.expect("Opening a VP database file failed");
 	let mut buf_reader = std::io::BufReader::new(file);
 	let mut contents = vec![];
 	let size = buf_reader.read_to_end(&mut contents).unwrap();
@@ -43,9 +43,13 @@ fn get_node_from_file(file_path: String) -> Node {
 }
 
 fn overwrite_node_to_file(file_path: String, data: Vec<u8>) {
-	AtomicFile::new(file_path, AllowOverwrite)
-		.write(|file| file.write_all(&data))
-		.expect("Writing to atomic file failed");
+	OpenOptions::new()
+		.write(true)
+		.create(true)
+		.open(file_path)
+		.expect("Opening a VP database file failed")
+		.write_all(&data)
+		.expect("Writing a VP database file failed");
 }
 
 impl FileNode {
@@ -102,8 +106,12 @@ impl TreeNode for FileNode {
 			.expect("Tried to add node to file that was not open")
 			.add(to_add, current_path);
 
+		// TODO find better times to save file nodes
 		if did_change == true {
 			self.has_changed = true;
+			//	if self.path_in_tree.size() > 10 {
+			//		self.save();
+			//	}
 		}
 
 		return false;
@@ -115,6 +123,16 @@ impl TreeNode for FileNode {
 
 	fn size(&self) -> u64 {
 		return self.open_temporarily().size();
+	}
+
+	fn print(&self, depth: u32) {
+		let padding = (0..depth).map(|_e| String::from(" ")).collect::<String>();
+		println!(
+			"{}Entering new file {}",
+			padding,
+			self.path_in_tree.to_file_path_string()
+		);
+		self.open_temporarily().print(depth + 1);
 	}
 
 	fn to_binary(&self) -> Vec<u8> {

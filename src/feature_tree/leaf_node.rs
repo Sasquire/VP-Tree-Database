@@ -25,6 +25,7 @@ impl TreeNode for LeafNode {
 	}
 
 	fn add(&mut self, to_add: UUIDDescriptionPair, _current_path: NodePath) -> bool {
+		// TODO maybe a check to ensure that nodes are not added as duplicates?
 		self.features.push(to_add);
 		return true;
 	}
@@ -35,7 +36,7 @@ impl TreeNode for LeafNode {
 			return SearchResult::new(
 				UUIDDescriptionPair::new(0, FeatureDescription::random()),
 				u32::MAX,
-				u64::MAX
+				u64::MAX,
 			);
 		}
 
@@ -58,6 +59,13 @@ impl TreeNode for LeafNode {
 
 	fn size(&self) -> u64 {
 		return self.features.len() as u64;
+	}
+
+	fn print(&self, _depth: u32) {
+		for _pair in &self.features {
+			// TODO toggle for showing the values inside leaf nodes
+			// println!("{:?}", pair);
+		}
 	}
 
 	fn to_binary(&self) -> Vec<u8> {

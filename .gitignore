@@ -5,12 +5,9 @@
 /import_data/
 /images/
 /database/
+/database2/
 test.sh
 test2.sh
-
-# Files created by the database
-metadata.sqlite3
-vp_tree.*
 
 # Temporary storage
 /tmp/

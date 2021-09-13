@@ -80,6 +80,19 @@ impl TreeNode for InternalNode {
 		return (*self.near).size() + (*self.far).size();
 	}
 
+	fn print(&self, depth: u32) {
+		let padding = (0..depth).map(|_e| String::from(" ")).collect::<String>();
+		println!(
+			"{}{}, n={:12}, f={:12}",
+			padding,
+			self.size(),
+			self.near.size(),
+			self.far.size()
+		);
+		self.near.print(depth + 1);
+		self.far.print(depth + 1);
+	}
+
 	fn to_binary(&self) -> Vec<u8> {
 		let mut results = vec![];
 		results.append(
@@ -131,14 +144,50 @@ impl TreeNode for InternalNode {
 
 impl InternalNode {
 	pub fn new_from_leaf(node: &mut LeafNode, split_point_path: NodePath) -> Node {
-		return split_leaf_with_default_radius(node, split_point_path);
+		return split_leaf_with_median_radius(node, split_point_path);
 	}
 }
 
+#[allow(dead_code)]
 fn split_leaf_with_default_radius(node: &mut LeafNode, split_point_path: NodePath) -> Node {
 	let mut new_node = InternalNode::new_empty();
 	for pair in node.get_owned_features() {
 		new_node.add(pair, split_point_path.clone());
 	}
 	return new_node;
+}
+
+// Does not produce a perfectly balanced tree, but because the radius is chosen
+// from a sample of crate::constants::MAX_LEAF_NODE_SIZE nodes, it is a more
+// inteligent guess of what a good radius would be. Having a more balanced tree
+// should obviously be desired, but with the less-balanced version, there were
+// issues where file names became too long.
+// This method could be improved for speed, but runs fast enough for now.
+fn split_leaf_with_median_radius(node: &mut LeafNode, split_point_path: NodePath) -> Node {
+	let pairs = node.get_owned_features();
+	let vantage = FeatureDescription::random_edge();
+	let mut distances: Vec<u32> = pairs
+		.iter()
+		.map(|e| e.get_description().distance(&vantage))
+		.collect();
+	distances.sort();
+	let median = distances[pairs.len() / 2];
+
+	let mut near = LeafNode::new_empty();
+	let mut far = LeafNode::new_empty();
+	for pair in pairs {
+		let distance = pair.get_description().distance(&vantage);
+		if distance < median {
+			near.add(pair, split_point_path.clone());
+		} else {
+			far.add(pair, split_point_path.clone());
+		}
+	}
+
+	return Node::Internal(InternalNode {
+		vantage: vantage,
+		radius: median,
+		near: Box::new(near),
+		far: Box::new(far),
+	});
 }

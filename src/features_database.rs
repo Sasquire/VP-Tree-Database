@@ -20,3 +20,7 @@ pub fn insert_description_vec_into_database(description_vec: Vec<UUIDDescription
 pub fn find_feature_description_in_database(to_find: &FeatureDescription) -> SearchResult {
 	return Node::get_root_node().find(to_find);
 }
+
+pub fn print_path(path: String) {
+	Node::get_file_as_root(path).print(0);
+}
