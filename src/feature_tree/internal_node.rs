@@ -2,7 +2,7 @@ use crate::feature_tree::leaf_node::LeafNode;
 use crate::feature_tree::node::Node;
 use crate::feature_tree::node::TreeNode;
 use crate::feature_tree::node_path::NodePath;
-use crate::feature_tree::search_result::SearchResult;
+use crate::feature_tree::search_result::SearchResultList;
 use crate::features::feature_description::FeatureDescription;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 
@@ -36,43 +36,27 @@ impl TreeNode for InternalNode {
 		}
 	}
 
-	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
+	fn find(&self, results: &mut SearchResultList) {
 		// TODO is it possible to make this cleaner?
 		// radius belongs to far
-		let distance_to_vantage = self.vantage.distance(to_find);
+		let distance_to_vantage = results.distance_to_feature(&self.vantage);
 		let is_near = distance_to_vantage < self.radius;
 
-		if is_near {
-			let mut near_guess = self.near.find(to_find);
-			let is_lucky_guess =
-				near_guess.distance_from_target() + distance_to_vantage < self.radius;
-			if is_lucky_guess {
-				return near_guess;
-			} else {
-				let mut far_guess = self.far.find(to_find);
-				SearchResult::combine_comparisons(&mut near_guess, &mut far_guess);
-				if near_guess.distance_from_target() < far_guess.distance_from_target() {
-					return near_guess;
-				} else {
-					return far_guess;
-				}
-			}
-		} else {
-			// radius belongs to far
-			let mut far_guess = self.far.find(to_find);
-			let is_lucky_guess =
-				self.radius + far_guess.distance_from_target() <= distance_to_vantage;
-			if is_lucky_guess {
-				return far_guess;
-			} else {
-				let mut near_guess = self.near.find(to_find);
-				SearchResult::combine_comparisons(&mut near_guess, &mut far_guess);
-				if near_guess.distance_from_target() < far_guess.distance_from_target() {
-					return near_guess;
-				} else {
-					return far_guess;
-				}
-			}
+		match is_near {
+			true => self.near.find(results),
+			false => self.far.find(results),
+		};
+
+		let is_lucky = match is_near {
+			true => results.get_worst_distance_to_target() + distance_to_vantage < self.radius,
+			false => self.radius + results.get_worst_distance_to_target() <= distance_to_vantage,
+		};
+
+		if is_lucky == false {
+			match is_near {
+				true => self.far.find(results),
+				false => self.near.find(results),
+			};
 		}
 	}
 

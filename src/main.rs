@@ -80,16 +80,23 @@ fn main() {
 fn rank_all_features_from_database(file_path: &str) {
 	let image_features = extract_from_image::get_features_from_image_path(file_path);
 	for point_of_interest in image_features {
-		let result =
-			features_database::find_feature_description_in_database(&point_of_interest.description);
-		//	println!(
-		//		"Found a match with distance {} in {} comparisons. Match UUID is {}.",
-		//		result.distance_from_target(),
-		//		result.get_comparisons(),
-		//		result.get_result_uuid()
-		//	);
-		let metadata = metadata_database::find_metadata_from_uuid(result.get_result_uuid());
-		println!("{}", metadata.md5);
+		let (comparisons, results) =
+			features_database::find_feature_description_in_database(point_of_interest.description);
+		println!(
+			"Found {} results in {} comparisons",
+			results.len(),
+			comparisons
+		);
+		for result in results {
+			let metadata = metadata_database::find_metadata_from_uuid(result.get_result_uuid());
+			println!(
+				"\t{} (id: {}, distance: {})",
+				metadata.md5,
+				result.get_result_uuid(),
+				result.get_distance()
+			);
+		}
+		println!("");
 	}
 }
 
@@ -133,8 +140,12 @@ mod add {
 			sqlite_handle.join().unwrap();
 			vp_tree_handle.join().unwrap();
 		} else {
+			let counta = metadata_list.len();
+			let countb = description_pairs.len();
+			println!("Adding {} metadata and {} descriptions", counta, countb);
 			metadata_database::insert_meta_data_pair_vec_to_database(metadata_list);
 			features_database::insert_description_vec_into_database(description_pairs);
+			println!("Adding {} metadata and {} descriptions", counta, countb);
 		}
 	}
 

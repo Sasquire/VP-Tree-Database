@@ -1,8 +1,7 @@
 use crate::feature_tree::node::Node;
 use crate::feature_tree::node::TreeNode;
 use crate::feature_tree::node_path::NodePath;
-use crate::feature_tree::search_result::SearchResult;
-use crate::features::feature_description::FeatureDescription;
+use crate::feature_tree::search_result::SearchResultList;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 use std::convert::TryInto;
 
@@ -31,30 +30,10 @@ impl TreeNode for LeafNode {
 	}
 
 	// TODO does not support for k nearest points, only 1
-	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
-		if self.features.len() == 0 {
-			return SearchResult::new(
-				UUIDDescriptionPair::new(0, FeatureDescription::random()),
-				u32::MAX,
-				u64::MAX,
-			);
+	fn find(&self, results: &mut SearchResultList) {
+		for pair in &self.features {
+			results.try_to_add(pair);
 		}
-
-		let mut smallest_dist = u32::MAX;
-		let mut smallest_index = &self.features[0];
-		for feature in &self.features {
-			let distance = feature.get_description().distance(to_find);
-			if distance < smallest_dist {
-				smallest_dist = distance;
-				smallest_index = feature;
-			}
-		}
-
-		return SearchResult::new(
-			smallest_index.clone(),
-			smallest_dist,
-			self.features.len() as u64,
-		);
 	}
 
 	fn size(&self) -> u64 {

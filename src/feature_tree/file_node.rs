@@ -1,18 +1,12 @@
 use crate::feature_tree::node::Node;
 use crate::feature_tree::node::TreeNode;
 use crate::feature_tree::node_path::NodePath;
-use crate::feature_tree::search_result::SearchResult;
-use crate::features::feature_description::FeatureDescription;
+use crate::feature_tree::search_result::SearchResultList;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 
 use std::fs::OpenOptions;
 use std::io::Read;
 use std::io::Write;
-
-use std::path::Path;
-
-//use atomicwrites::AllowOverwrite;
-//use atomicwrites::AtomicFile;
 
 #[derive(Clone)]
 pub struct FileNode {
@@ -117,8 +111,8 @@ impl TreeNode for FileNode {
 		return false;
 	}
 
-	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
-		return self.open_temporarily().find(to_find);
+	fn find(&self, results: &mut SearchResultList) {
+		return self.open_temporarily().find(results);
 	}
 
 	fn size(&self) -> u64 {

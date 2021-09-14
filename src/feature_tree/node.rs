@@ -3,7 +3,7 @@ use crate::feature_tree::internal_node::InternalNode;
 use crate::feature_tree::leaf_node::LeafNode;
 
 use crate::feature_tree::node_path::NodePath;
-use crate::feature_tree::search_result::SearchResult;
+use crate::feature_tree::search_result::SearchResultList;
 use crate::features::feature_description::FeatureDescription;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 
@@ -30,7 +30,7 @@ impl Node {
 pub trait TreeNode {
 	fn new_empty() -> Node;
 	fn add(&mut self, to_add: UUIDDescriptionPair, current_path: NodePath) -> bool;
-	fn find(&self, to_find: &FeatureDescription) -> SearchResult;
+	fn find(&self, results: &mut SearchResultList);
 	fn size(&self) -> u64;
 
 	fn print(&self, depth: u32);
@@ -73,11 +73,11 @@ impl TreeNode for Node {
 		}
 	}
 
-	fn find(&self, to_find: &FeatureDescription) -> SearchResult {
+	fn find(&self, results: &mut SearchResultList) {
 		match self {
-			Node::Internal(node) => node.find(to_find),
-			Node::Leaf(node) => node.find(to_find),
-			Node::File(node) => node.find(to_find),
+			Node::Internal(node) => node.find(results),
+			Node::Leaf(node) => node.find(results),
+			Node::File(node) => node.find(results),
 		}
 	}
 
