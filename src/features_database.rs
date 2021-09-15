@@ -20,9 +20,9 @@ pub fn insert_description_vec_into_database(description_vec: Vec<UUIDDescription
 
 pub fn find_feature_description_in_database(
 	to_find: FeatureDescription,
+	number_of_neighbors: usize,
 ) -> (u64, Vec<SearchResult>) {
-	let K = 1000;
-	let mut results = SearchResultList::new(K, to_find);
+	let mut results = SearchResultList::new(number_of_neighbors, to_find);
 	Node::get_root_node().find(&mut results);
 	return (results.get_comparisons(), results.get_results());
 }

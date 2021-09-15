@@ -22,9 +22,6 @@ rand_chacha = "*"
 version = "0.25.3"
 features = ["bundled"]
 
-# Used for benchmarking, may return
-# chrono = "0.4"
-
 
 
 # https://aspenuwu.me/blog/rust-optimization/

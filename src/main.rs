@@ -26,6 +26,7 @@ fn main() {
 		.version(crate::constants::VERSION)
 		.author(crate::constants::CONTACT_INFO)
 		.about(crate::constants::ABOUT)
+		.long_about(crate::constants::LONG_ABOUT)
 		.arg(
 			Arg::with_name("add_image")
 				.short("a")
@@ -39,6 +40,13 @@ fn main() {
 				.long("find_image")
 				.takes_value(true)
 				.help("Filepath to an image which should be searched for in the database"),
+		)
+		.arg(
+			Arg::with_name("k_nearest_neighbors")
+				.short("k")
+				.long("k_nearest_neighbors")
+				.takes_value(true)
+				.help("Positive integer for the maximum number of neighbors (only used when using -f)"),
 		)
 		.arg(
 			Arg::with_name("python_binary")
@@ -62,8 +70,9 @@ fn main() {
 		add::add_image_to_database(image_path);
 	} else if matches.value_of("find_image").is_some() {
 		let image_path = matches.value_of("find_image").unwrap();
+		let k = get_k_from_cli(matches.value_of("k_nearest_neighbors"));
 		println!("should search image {}", image_path);
-		rank_all_features_from_database(image_path);
+		rank_all_features_from_database(image_path, k);
 	} else if matches.value_of("python_binary").is_some() {
 		let python_binary = matches.value_of("python_binary").unwrap();
 		println!("should merge binary {}", python_binary);
@@ -77,27 +86,75 @@ fn main() {
 	}
 }
 
-fn rank_all_features_from_database(file_path: &str) {
+fn rank_all_features_from_database(file_path: &str, number_of_neighbors: usize) {
 	let image_features = extract_from_image::get_features_from_image_path(file_path);
-	for point_of_interest in image_features {
-		let (comparisons, results) =
-			features_database::find_feature_description_in_database(point_of_interest.description);
-		println!(
-			"Found {} results in {} comparisons",
-			results.len(),
-			comparisons
-		);
-		for result in results {
-			let metadata = metadata_database::find_metadata_from_uuid(result.get_result_uuid());
-			println!(
-				"\t{} (id: {}, distance: {})",
-				metadata.md5,
-				result.get_result_uuid(),
-				result.get_distance()
-			);
+
+	let mut threads = vec![];
+	for (id, point_of_interest) in image_features.into_iter().enumerate() {
+		if crate::constants::THREADED_SEARCH {
+			threads.push(std::thread::spawn(move || {
+				rank_feature_from_database(id, point_of_interest, number_of_neighbors)
+			}));
+		} else {
+			rank_feature_from_database(id, point_of_interest, number_of_neighbors);
 		}
-		println!("");
 	}
+	threads.into_iter().for_each(|e| e.join().unwrap());
+}
+
+fn rank_feature_from_database(
+	thread_id: usize,
+	point_of_interest: extract_from_image::PointOfInterest,
+	number_of_neighbors: usize,
+) {
+	let (comparisons, results) = features_database::find_feature_description_in_database(
+		point_of_interest.description,
+		number_of_neighbors,
+	);
+	println!(
+		"{:>5} Found {:>6} results in {:>13} comparisons                                      {:>8.2} {:>8.2} {:>6.2} {:>6.2} {:>13.10} {:>6}",
+		thread_id,
+		results.len(),
+		comparisons,
+		point_of_interest.metadata.pt.x,
+		point_of_interest.metadata.pt.y,
+		point_of_interest.metadata.size,
+		point_of_interest.metadata.angle,
+		point_of_interest.metadata.response,
+		point_of_interest.metadata.octave
+	);
+
+	println!("input rank distance                              md5 file-ext frame file-uuid          uuid        x        y   size  angle      response octave");
+	for (counter, result) in results.iter().enumerate() {
+		let metadata = metadata_database::find_metadata_from_uuid(result.get_result_uuid());
+		println!("{:>5} {:>5} {:>8} {:>32} {:>8} {:>5} {:>9} {:>13} {:>8.2} {:>8.2} {:>6.2} {:>6.2} {:>13.10} {:>6}",
+			thread_id,
+			counter,
+			result.get_distance(),
+			metadata.md5,
+			metadata.file_ext,
+			metadata.frame_id,
+			metadata.file_uuid,
+			metadata.uuid,
+			metadata.x,
+			metadata.y,
+			metadata.size,
+			metadata.angle,
+			metadata.response,
+			metadata.octave,
+		);
+	}
+}
+
+fn get_k_from_cli(k: Option<&str>) -> usize {
+	if k.is_some() {
+		let k = k.unwrap().parse();
+		if k.is_ok() {
+			return crate::constants::MAX_K_VALUE.min(1.max(k.unwrap()));
+		}
+	}
+
+	return crate::constants::DEFAULT_K;
 }
 
 mod add {
@@ -128,8 +185,7 @@ mod add {
 	fn insert_metadata_and_description_to_database(list: FeaturesWithUUID) {
 		let (metadata_list, description_pairs) = list;
 
-		const THREADED_INSERT: bool = false;
-		if THREADED_INSERT {
+		if crate::constants::THREADED_INSERT {
 			let sqlite_handle = std::thread::spawn(|| {
 				metadata_database::insert_meta_data_pair_vec_to_database(metadata_list)
 			});
@@ -140,12 +196,8 @@ mod add {
 			sqlite_handle.join().unwrap();
 			vp_tree_handle.join().unwrap();
 		} else {
-			let counta = metadata_list.len();
-			let countb = description_pairs.len();
-			println!("Adding {} metadata and {} descriptions", counta, countb);
 			metadata_database::insert_meta_data_pair_vec_to_database(metadata_list);
 			features_database::insert_description_vec_into_database(description_pairs);
-			println!("Adding {} metadata and {} descriptions", counta, countb);
 		}
 	}
 

@@ -37,7 +37,6 @@ impl TreeNode for InternalNode {
 	}
 
 	fn find(&self, results: &mut SearchResultList) {
-		// TODO is it possible to make this cleaner?
 		// radius belongs to far
 		let distance_to_vantage = results.distance_to_feature(&self.vantage);
 		let is_near = distance_to_vantage < self.radius;

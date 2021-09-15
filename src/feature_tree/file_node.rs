@@ -16,9 +16,15 @@ pub struct FileNode {
 }
 
 fn get_node_from_file(file_path: String) -> Node {
-	//	let folder_path = Path::new(&file_path).parent().unwrap().to_str().unwrap();
-	//	std::fs::create_dir_all(folder_path).unwrap();
+	let binary = read_file(file_path);
+	if binary.len() == 0 {
+		return Node::new_empty();
+	} else {
+		return Node::from_binary(&binary);
+	};
+}
 
+fn read_file(file_path: String) -> Vec<u8> {
 	let file = OpenOptions::new()
 		.read(true)
 		.write(true)
@@ -27,13 +33,8 @@ fn get_node_from_file(file_path: String) -> Node {
 		.expect("Opening a VP database file failed");
 	let mut buf_reader = std::io::BufReader::new(file);
 	let mut contents = vec![];
-	let size = buf_reader.read_to_end(&mut contents).unwrap();
-	let node = if size == 0 {
-		Node::new_empty()
-	} else {
-		Node::from_binary(&contents)
-	};
-	return node;
+	let _size = buf_reader.read_to_end(&mut contents).unwrap();
+	return contents;
 }
 
 fn overwrite_node_to_file(file_path: String, data: Vec<u8>) {
@@ -100,12 +101,11 @@ impl TreeNode for FileNode {
 			.expect("Tried to add node to file that was not open")
 			.add(to_add, current_path);
 
-		// TODO find better times to save file nodes
 		if did_change == true {
 			self.has_changed = true;
-			//	if self.path_in_tree.size() > 10 {
-			//		self.save();
-			//	}
+			if crate::constants::FILE_NODE_MEMORY_SAVER {
+				self.save();
+			}
 		}
 
 		return false;

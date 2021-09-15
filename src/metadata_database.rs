@@ -161,17 +161,19 @@ fn insert_metadata_info_into_database(statement: &mut Statement, info: (u64, u64
 #[allow(dead_code)]
 pub struct KeypointMetadata {
 	// My data
-	uuid: u64,
+	pub file_uuid: u64,
+	pub uuid: u64,
 	pub md5: String,
-	file_ext: String,
+	pub file_ext: String,
+	pub frame_id: u64,
 
 	// Keypoint data
-	x: f32,
-	y: f32,
-	size: f32,
-	angle: f32,
-	response: f32,
-	octave: u8,
+	pub x: f32,
+	pub y: f32,
+	pub size: f32,
+	pub angle: f32,
+	pub response: f32,
+	pub octave: u8,
 }
 
 pub fn find_metadata_from_uuid(uuid_to_find: u64) -> KeypointMetadata {
@@ -190,9 +192,11 @@ pub fn find_metadata_from_uuid(uuid_to_find: u64) -> KeypointMetadata {
 
 	fn row_to_keypoint_metadata(row: &rusqlite::Row) -> Result<KeypointMetadata, rusqlite::Error> {
 		return Ok(KeypointMetadata {
+			file_uuid: row.get("file_uuid")?,
 			uuid: row.get("uuid")?,
 			md5: row.get("md5")?,
 			file_ext: row.get("file_ext")?,
+			frame_id: row.get("frame_id")?,
 
 			x: row.get("x")?,
 			y: row.get("y")?,

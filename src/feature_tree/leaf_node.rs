@@ -29,7 +29,6 @@ impl TreeNode for LeafNode {
 		return true;
 	}
 
-	// TODO does not support for k nearest points, only 1
 	fn find(&self, results: &mut SearchResultList) {
 		for pair in &self.features {
 			results.try_to_add(pair);
@@ -61,16 +60,14 @@ impl TreeNode for LeafNode {
 		let _node_type = &binary[crate::constants::SIGNATURE_RANGE];
 		let number_nodes =
 			u64::from_le_bytes(binary[4..12].try_into().expect("Slice has bad length"));
-		// TODO avoid using the new node and adding everything one by one
-		let mut new_node = LeafNode::new_empty();
+
+		let mut pairs = vec![];
 		for i in 0..number_nodes {
 			let start = (12 + i * 40) as usize;
 			let end = (start + 40) as usize;
-			new_node.add(
-				UUIDDescriptionPair::from_binary(&binary[start..end]),
-				NodePath::new_empty(),
-			);
+			pairs.push(UUIDDescriptionPair::from_binary(&binary[start..end]));
 		}
-		return new_node;
+
+		return Node::Leaf(LeafNode { features: pairs });
 	}
 }

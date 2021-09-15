@@ -4,7 +4,6 @@ use crate::feature_tree::leaf_node::LeafNode;
 
 use crate::feature_tree::node_path::NodePath;
 use crate::feature_tree::search_result::SearchResultList;
-use crate::features::feature_description::FeatureDescription;
 use crate::features::uuid_description_pair::UUIDDescriptionPair;
 
 #[derive(Clone)]
@@ -27,6 +26,12 @@ impl Node {
 }
 
 // TODO am I using traits correctly?
+// TODO optimize from_binary
+// I find it unlikely that `find` can be optimized very well, but a substantial
+// amount of time is spent building the nodes themselves. Not all of the node
+// needs to be loaded into memory at the same time so if it can be made so that
+// parts of nodes are only parsed when needed, it would speed up the time to
+// find a feature.
 pub trait TreeNode {
 	fn new_empty() -> Node;
 	fn add(&mut self, to_add: UUIDDescriptionPair, current_path: NodePath) -> bool;
