@@ -71,7 +71,6 @@ fn main() {
 	} else if matches.value_of("find_image").is_some() {
 		let image_path = matches.value_of("find_image").unwrap();
 		let k = get_k_from_cli(matches.value_of("k_nearest_neighbors"));
-		println!("should search image {}", image_path);
 		rank_all_features_from_database(image_path, k);
 	} else if matches.value_of("python_binary").is_some() {
 		let python_binary = matches.value_of("python_binary").unwrap();

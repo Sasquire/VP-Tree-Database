@@ -1,13 +1,10 @@
 # Rust files
-/target/
+target/
 
 # Files for importing and testing
-/import_data/
-/images/
-/database/
-/database2/
-test.sh
-test2.sh
+import_data/
+database/
 
-# Temporary storage
-/tmp/
+node_modules/
+package-lock.json
+secret.json

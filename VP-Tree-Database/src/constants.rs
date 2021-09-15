@@ -45,4 +45,4 @@ pub const FILE_NODE_SIGNATURE: &str = "file";
 
 pub const DEFAULT_K: usize = 100;
 pub const MAX_K_VALUE: usize = 1000;
-pub const THREADED_SEARCH: bool = false;
+pub const THREADED_SEARCH: bool = true;
