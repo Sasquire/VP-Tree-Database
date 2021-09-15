@@ -95,14 +95,14 @@
 			</div>
 			<div id="controls">
 				<div>
-                    <span>Use the k-nearest-nodes</span>
-                    <input type="range" min="10" max="500" id="k_value" value="10"></input><output id="k_value_output">k = 10</output>
+					<span>Use the k-nearest-nodes</span>
+					<input type="range" min="10" max="500" id="k_value" value="10"></input><output id="k_value_output">k = 10</output>
 				</div>
 				<div><button id="request_search" class="hidden">Search</button></div>
 				<hr>
 				<div>
-                    <span>Only see images that were returned min times</span>
-                    <input type="range" min="1" max="20" id="count_minimum" value="5"></input><output id="count_minimum_output">min = 5</output>
+					<span>Only see images that were returned min times</span>
+					<input type="range" min="1" max="20" id="count_minimum" value="5"></input><output id="count_minimum_output">min = 5</output>
 				</div>
 			</div>
 			<div id="logging">
@@ -124,7 +124,7 @@
 			const first_file = document.getElementById('input_file').files[0];
 			input_image.src = URL.createObjectURL(first_file);
 			document.getElementById('request_search').classList.remove('hidden');
-            log('Loaded an image')
+			log('Loaded an image')
 		});
 
 		document.getElementById('count_minimum').addEventListener('input', () => {
@@ -161,8 +161,7 @@
 			document.getElementById('k_value').parentNode.firstElementChild.classList.add('hidden');
 			GLOBALS.results = await get_image_results();
 			log(`${GLOBALS.results.length} Results returned, now ranking results`);
-            update_rankings();
-			// const results = await get_results();
+			update_rankings();
 		}
 
 		async function get_image_results () {

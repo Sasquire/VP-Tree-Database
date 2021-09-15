@@ -15,13 +15,13 @@ async function verify_input (files, k, req, res) {
 	try {
 		const tmp_image_path = files.file0.path;
 		const verified_path = path.parse(tmp_image_path);
-        const full_path = path.join(verified_path.dir, verified_path.base);
+		const full_path = path.join(verified_path.dir, verified_path.base);
 
-        const image_result = await spawn('file', ['-bi', full_path], {});
-        const valid_types = ['image/png; charset=binary', 'image/jpeg; charset=binary'];
-        if (valid_types.includes(image_result.trim()) === false) {
-            throw new Error();
-        }
+		const image_result = await spawn('file', ['-bi', full_path], {});
+		const valid_types = ['image/png; charset=binary', 'image/jpeg; charset=binary'];
+		if (valid_types.includes(image_result.trim()) === false) {
+			throw new Error();
+		}
 
 		return [full_path, parseInt(k, 10)];
 	} catch (e) {
@@ -47,10 +47,10 @@ async function run_program (image_path, k, req, res) {
 	log(req, `Data extracted from ${image_path}`);
 
 	try {
-        log(req, `Parsing data from ${image_path}`);
-        let result = parse_output(output_string);
-        log(req, `Data parsed from ${image_path}`);
-        return result;
+		log(req, `Parsing data from ${image_path}`);
+		let result = parse_output(output_string);
+		log(req, `Data parsed from ${image_path}`);
+		return result;
 	} catch (e) {
 		log(req, `Error parsing key point data\n${e}\n`);
 		err(res, 'Error parsing key point data');

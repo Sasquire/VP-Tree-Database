@@ -64,6 +64,9 @@ fn main() {
 
 	metadata_database::initialize_database();
 
+	// TODO threaded insert where features are found
+	// on threads and then inserts are done on a single thread
+
 	if matches.value_of("add_image").is_some() {
 		let image_path = matches.value_of("add_image").unwrap();
 		println!("should add image {}", image_path);

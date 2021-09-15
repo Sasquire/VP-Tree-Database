@@ -13,7 +13,7 @@ impl FrameInfo {
 
 		let md5 = String::from(*splits.get(0).unwrap());
 		let file_ext = String::from(*splits.get(1).unwrap());
-		let frame_id = 1;
+		let frame_id = 0;
 
 		return FrameInfo {
 			md5: md5,

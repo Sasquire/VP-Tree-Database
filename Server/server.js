@@ -18,13 +18,13 @@ app.get('/', (req, res) => {
 
 app.post('/get_image_results.json', async (req, res) => {
 	log(req, 'Requesting vectors from an image');
-    try {
-	    const [file_path, k] = await database_interface.verify_input(req.files, req.body.k, req, res);
- 	    const output = await database_interface.run_program(file_path, k, req, res);
-        res.send(output);
-    } catch (e) {
-        log(req, e);
-    }
+	try {
+		const [file_path, k] = await database_interface.verify_input(req.files, req.body.k, req, res);
+ 		const output = await database_interface.run_program(file_path, k, req, res);
+		res.send(output);
+	} catch (e) {
+		log(req, e);
+	}
 });
 
 app.listen(settings.port, () => {
