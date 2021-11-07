@@ -63,9 +63,8 @@ impl TreeNode for Node {
 					let _old_node = std::mem::replace(self, new_node);
 					self.add(to_add, current_path);
 					true
-				} else
-				/* Normal leaf node */
-				{
+				} else {
+					// Normal leaf node
 					node.add(to_add, current_path)
 				}
 			}

@@ -3,6 +3,7 @@
 use crate::frame_info::FrameInfo;
 
 use opencv::core::KeyPoint;
+use rocket::serde::Serialize;
 use rusqlite::params;
 use rusqlite::Connection;
 use rusqlite::OpenFlags;
@@ -159,6 +160,8 @@ fn insert_metadata_info_into_database(statement: &mut Statement, info: (u64, u64
 }
 
 #[allow(dead_code)]
+#[derive(Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct KeypointMetadata {
 	// My data
 	pub file_uuid: u64,

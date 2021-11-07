@@ -5,6 +5,5 @@ target/
 import_data/
 database/
 
-node_modules/
-package-lock.json
-secret.json
+# Where opencv source is stored
+opencv
