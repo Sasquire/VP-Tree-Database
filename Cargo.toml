@@ -23,6 +23,7 @@ version = "0.25.3"
 features = ["bundled"]
 
 [dependencies.rocket]
+version = "0.5.0-rc.1"
 features = ["json", "msgpack", "uuid"]
 
 
