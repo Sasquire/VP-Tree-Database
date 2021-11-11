@@ -250,7 +250,14 @@
 			const img_clone = document.createElement('img')
 			img_clone.src = image_element.src;
 			
-			const matrix = cv.imread(img_clone);
+			// opencv.js defaults to RGBA while every other piece of opencv software
+			// seems to default to BGR. Because of this, the database is stored in
+			// BGR while Javascript sends RBG requests, causing search results to be
+			// poor. Be thankful I suffered for 4 hours to find this out.
+			const source_matrix = cv.imread(img_clone);
+			const matrix = new cv.Mat();
+			cv.cvtColor(source_matrix, matrix, cv.COLOR_RGBA2BGR);
+
 			const keypoints = new cv.KeyPointVector();
 			const descriptors = new cv.Mat();
 			const unknown_matrix = new cv.Mat()
@@ -258,6 +265,7 @@
 
 			const pairs = parse_keypoints_and_descriptors(keypoints, descriptors);
 
+			source_matrix.delete();
 			matrix.delete();
 			unknown_matrix.delete();
 			keypoints.delete();
