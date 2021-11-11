@@ -10,6 +10,12 @@ core = {
     'Algorithm': [],
 }
 
+imgproc = {
+    '': [
+        'cvtColor'
+	]
+}
+
 features2d = {
 	'Feature2D': ['detectAndCompute'],
 	'ORB': [
@@ -27,7 +33,7 @@ features2d = {
 	]
 }
 
-white_list = makeWhiteList([core, features2d])
+white_list = makeWhiteList([core, imgproc, features2d])
 
 ```
 
